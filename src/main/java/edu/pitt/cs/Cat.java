@@ -1,40 +1,45 @@
 package edu.pitt.cs;
 
 import org.mockito.Mockito;
-import static org.mockito.Mockito.*; 
 
 public interface Cat {
-	public static Cat createInstance(InstanceType type, int id, String name) {
-		switch (type) {
-			case IMPL:
-				return new CatImpl(id, name);
-			case BUGGY:
-				return new CatBuggy(id, name);
-			case SOLUTION:
-				return new CatSolution(id, name);
-			case MOCK:
-			    // TODO: Return a mock object that emulates the behavior of a real object.
-				return null;
-			default:
-				assert(false);
-				return null;
-		}
-	}
 
-	// WARNING: You are not allowed to change any part of the interface.
-	// That means you cannot add any method nor modify any of these methods.
-	
-	public void rentCat();
+    public static Cat createInstance(InstanceType type, int id, String name) {
+        switch (type) {
+            case IMPL:
+                return new CatImpl(id, name);
+            case BUGGY:
+                return new CatBuggy(id, name);
+            case SOLUTION:
+                return new CatSolution(id, name);
+            case MOCK:
+                // TODO: Return a mock object that emulates the behavior of the real object, if you feel you need one.
+                //return null;
+                Cat fakeCat = Mockito.mock(Cat.class);
+                Mockito.when(fakeCat.getId()).thenReturn(id);
+                Mockito.when(fakeCat.getName()).thenReturn(name);
+                Mockito.when(fakeCat.getRented()).thenReturn(false);
+                Mockito.when(fakeCat.toString()).thenReturn("ID " + id + ". " + name);
+                return fakeCat;
+            default:
+                assert (false);
+                return null;
+        }
+    }
 
-	public void returnCat();
+    // WARNING: You are not allowed to change any part of the interface.
+    // That means you cannot add any method nor modify any of these methods.
+    public void rentCat();
 
-	public void renameCat(String name);
+    public void returnCat();
 
-	public String getName();
+    public void renameCat(String name);
 
-	public int getId();
+    public String getName();
 
-	public boolean getRented();
+    public int getId();
 
-	public String toString();
+    public boolean getRented();
+
+    public String toString();
 }
