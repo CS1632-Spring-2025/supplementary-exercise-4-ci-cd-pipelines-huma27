@@ -1,7 +1,6 @@
 name: Maven CI
 
 # Triggers manually or on push or pull request on the main branch
-# (in other words, on a code integration event.)
 on:
   workflow_dispatch:
   push:
@@ -10,10 +9,9 @@ on:
     branches: [ "main" ]
 
 jobs:
-  
+
   # Runs the Maven test phase on the project
   maven_test:
-
     runs-on: ubuntu-latest
 
     permissions:
@@ -21,13 +19,11 @@ jobs:
 
     steps:
 
-    # The uses: keyword invokes a GitHub action:
-    # https://github.com/marketplace/actions/checkout
+    # Checkout repository
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # This invokes the Setup Java JDK GitHub action:
-    # https://github.com/marketplace/actions/setup-java-jdk
+    # Set up JDK 11
     - name: Set up JDK 11
       uses: actions/setup-java@v3
       with:
@@ -35,31 +31,26 @@ jobs:
         distribution: 'zulu'
         cache: maven
 
+    # Cache the build files
+    - name: Cache build
+      uses: actions/cache@v3
+      with:
+        key: build-${{hashFiles('pom.xml')}}
+        path: .
+
+    # Run Maven tests
     - name: Test with Maven
       run: mvn test
 
-    # https://github.com/marketplace/actions/upload-a-build-artifact
+    # Upload Jacoco coverage results as artifact
     - name: Upload jacoco results as artifact
       uses: actions/upload-artifact@v4
       with:
         name: Jacoco coverage results
         path: target/site/jacoco
 
-    - name: Cache build
-    uses: actions/cache@v3
-    with:
-      key: cached-build-${{github.sha}}
-      path: .
-
   # Uploads dependency graph to GitHub to receive Dependabot alerts 
   update_dependence_graph:
-
-  - name: Restore cached build
-    uses: actions/cache@v3
-    with:
-      key: cached-build-${{github.sha}}
-      path: .
-
     runs-on: ubuntu-latest
 
     permissions:
@@ -67,6 +58,13 @@ jobs:
 
     steps:
 
-    # https://github.com/marketplace/actions/maven-dependency-tree-dependency-submission
+    # Restore cached build files from the previous job
+    - name: Restore cached build
+      uses: actions/cache@v3
+      with:
+        key: build-${{hashFiles('pom.xml')}}
+        path: .
+
+    # Update the Maven dependency graph
     - name: Update dependency graph
       uses: advanced-security/maven-dependency-submission-action@v3
